@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>DataGuardX — Smart Protection System (Single File)</title>
+<meta name="description" content="Single-file prototype: Home, Login, Signup, Dashboard with scam alerts & hacker details (login-protected). Neon Blue Cyber theme." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#00131a; --panel:#071826; --muted:#9fb4c6; --neon:#00f0ff; --accent:#4cc9f0; --danger:#ff5a73; --ok:#4de08c;
+  --radius:12px; --glass:rgba(255,255,255,0.03); --shadow: 0 18px 60px rgba(0,0,0,0.6);
+  font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background: linear-gradient(180deg,var(--bg),#001b26 70%); color:#e8fbff;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; padding:20px;
+}
+
+/* App container */
+.app{max-width:1100px;margin:0 auto;}
+
+/* Header */
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--neon),var(--accent));display:grid;place-items:center;color:#001;font-weight:800}
+.brand h1{margin:0;font-size:1.1rem}
+.muted{color:var(--muted);font-size:13px}
+
+/* Nav */
+.nav{display:flex;gap:8px;align-items:center}
+.link{background:transparent;border:1px solid rgba(255,255,255,0.03);color:var(--neon);padding:8px 12px;border-radius:10px;text-decoration:none;cursor:pointer;font-weight:600}
+.cta{background:var(--neon);color:#001;padding:10px 14px;border-radius:12px;border:none;cursor:pointer;font-weight:700;box-shadow:0 12px 36px rgba(0,240,255,0.06)}
+
+/* Views */
+.view{display:none}
+.view.active{display:block;animation:fadeIn .18s ease both}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* Home layout */
+.layout{display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:start}
+@media(max-width:980px){.layout{grid-template-columns:1fr}.side{order:2}}
+
+.card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.03); box-shadow:var(--shadow)}
+
+.hero h2{margin:0;font-size:28px}
+.lead{color:var(--muted);margin-top:6px}
+
+/* features */
+.features{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}
+@media(max-width:640px){.features{grid-template-columns:1fr}}
+.feature{padding:12px;border-radius:10px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02)}
+
+/* Alerts list */
+.alerts{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.alert{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:10px;background:linear-gradient(90deg, rgba(0,240,255,0.02), transparent);border:1px solid rgba(0,240,255,0.04)}
+.alert .left{width:10px;height:10px;border-radius:50%}
+.alert h5{margin:0}
+.alert .meta{font-size:12px;color:var(--muted);margin-top:6px}
+
+/* Auth forms */
+.auth-wrap{display:flex;justify-content:center;align-items:center;min-height:60vh}
+.auth-card{width:100%;max-width:520px;padding:20px;border-radius:12px;background:linear-gradient(180deg,#02131a,#031726);border:1px solid rgba(255,255,255,0.04)}
+label{display:block;font-size:13px;color:var(--muted);margin-top:10px}
+input, select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:inherit;margin-top:6px}
+
+/* Dashboard */
+.dash-grid{display:grid;grid-template-columns:260px 1fr;gap:18px}
+@media(max-width:980px){.dash-grid{grid-template-columns:1fr}}
+.sidebar .logo{width:44px;height:44px}
+.nav-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.nav-item{background:transparent;border:none;color:var(--muted);padding:10px;text-align:left;border-radius:8px;cursor:pointer}
+.nav-item.active{background:rgba(0,240,255,0.03);color:var(--neon)}
+.widgets{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+@media(max-width:980px){.widgets{grid-template-columns:1fr}}
+.widget{padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
+.logs{max-height:260px;overflow:auto;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);margin-top:8px}
+
+/* modal */
+.modal-backdrop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:120}
+.modal{background:linear-gradient(180deg,#02131a,#031726);padding:18px;border-radius:12px;width:100%;max-width:640px;border:1px solid rgba(255,255,255,0.04)}
+
+/* small util */
+.btn-sm{padding:8px 10px;border-radius:8px;border:none;cursor:pointer}
+.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--neon)}
+.kbd{background:rgba(255,255,255,0.03);padding:4px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.02);color:var(--neon);font-weight:700}
+
+/* footer */
+footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+  <div class="app" role="application">
+    <!-- Header -->
+    <header class="header" role="banner">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">DG</div>
+        <div>
+          <h1>DataGuardX</h1>
+          <div class="muted">Smart Protection System</div>
+        </div>
+      </div>
+      <nav class="nav" role="navigation" aria-label="Main navigation">
+        <button class="link" onclick="navigate('home')">Home</button>
+        <button class="link" onclick="navigate('about')">About</button>
+        <button class="link" onclick="navigate('contact')">Contact</button>
+        <button class="cta" id="headerAuthBtn" onclick="navigate('login')">Login</button>
+      </nav>
+    </header>
+
+    <main>
+      <!-- HOME -->
+      <section id="home" class="view active" aria-labelledby="homeTitle">
+        <div class="layout">
+          <div>
+            <article class="card hero" aria-labelledby="homeTitle">
+              <h2 id="homeTitle">Protect Your Data Before Hackers Attack.</h2>
+              <p class="lead">AI-powered protection for phones, laptops and organizations. Real-time alerts, auto-block and secure backups keep your data safe.</p>
+              <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
+                <button class="cta" onclick="navigate('signup')">Get Started — Free</button>
+                <button class="ghost" onclick="runQuickScan()">Quick Scan</button>
+                <div style="margin-left:auto" class="muted">Press <span class="kbd">N</span> to trigger demo alert</div>
+              </div>
+
+              <div class="features" aria-hidden="false">
+                <div class="feature"><strong>Real-time Scam Alerts</strong><div class="muted">Instant push, email & call alerts.</div></div>
+                <div class="feature"><strong>AI Threat Detection</strong><div class="muted">On-device heuristics + cloud intelligence.</div></div>
+                <div class="feature"><strong>Secure Cloud Backup</strong><div class="muted">Zero-knowledge encrypted backups.</div></div>
+                <div class="feature"><strong>Auto-block & Remediation</strong><div class="muted">Auto-block malicious links & quarantine apps.</div></div>
+              </div>
+            </article>
+
+            <section class="card" style="margin-top:14px">
+              <h3>Latest Threat Alerts</h3>
+              <div class="alerts" id="landingAlerts" aria-live="polite"></div>
+            </section>
+
+            <section class="card" style="margin-top:14px">
+              <h3>Testimonials</h3>
+              <blockquote class="muted">"DataGuardX detected a phishing campaign targeting our students before anyone clicked." — Prof. Menon</blockquote>
+            </section>
+          </div>
+
+          <aside class="side card" aria-label="Quick status">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div class="muted">Device Security Score</div>
+                <div style="font-size:36px;font-weight:800;color:var(--neon)" id="homeScore">92</div>
+              </div>
+              <div style="text-align:right">
+                <div class="muted">Backup</div>
+                <div id="homeBackup" class="muted">Up to date</div>
+              </div>
+            </div>
+
+            <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+              <button class="cta" onclick="goProtected()">Open Dashboard</button>
+              <button class="ghost" onclick="triggerDemoAlert()">Trigger Demo Alert</button>
+              <button class="ghost" onclick="exportAlertsCSV()">Export Alerts (CSV)</button>
+            </div>
+
+            <div style="margin-top:12px" class="muted">Notifications via push, email, calls (demo)</div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ABOUT -->
+      <section id="about" class="view" aria-labelledby="aboutTitle">
+        <div class="card">
+          <h2 id="aboutTitle">About DataGuardX</h2>
+          <p class="muted">DataGuardX is a demo AI-powered cyber protection tool: real-time alerts, auto-blocking and secure backups to protect personal and organizational data.</p>
+        </div>
+      </section>
+
+      <!-- CONTACT -->
+      <section id="contact" class="view" aria-labelledby="contactTitle">
+        <div class="card">
+          <h2 id="contactTitle">Contact</h2>
+          <p class="muted">Demo: team@dataguardx.example — For production, integrate secure backend, push notifications and device agents.</p>
+        </div>
+      </section>
+
+      <!-- LOGIN -->
+      <section id="login" class="view" aria-labelledby="loginTitle">
+        <div class="auth-wrap">
+          <div class="auth-card" role="form" aria-labelledby="loginTitle">
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px">
+              <div class="logo" style="width:44px;height:44px;font-size:16px">DG</div>
+              <div>
+                <h2 id="loginTitle">Login</h2>
+                <div class="muted">Secure access to your dashboard</div>
+              </div>
+            </div>
+
+            <form id="loginForm" onsubmit="event.preventDefault(); doLogin();">
+              <label>Phone Number
+                <input id="loginPhone" required placeholder="+919000000000" />
+              </label>
+              <label>Email ID
+                <input id="loginEmail" type="email" required placeholder="you@example.com" />
+              </label>
+              <label>Password
+                <div style="display:flex;gap:8px">
+                  <input id="loginPass" type="password" required placeholder="Password" />
+                  <button type="button" class="ghost" id="togglePass" onclick="togglePassword()">Show</button>
+                </div>
+              </label>
+
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+                <a style="color:var(--muted);cursor:pointer" onclick="alert('Demo: reset via email (not implemented)')">Forgot Password?</a>
+                <a style="color:var(--muted);cursor:pointer" onclick="navigate('signup')">Create New Account</a>
+              </div>
+
+              <div style="margin-top:12px;display:flex;gap:8px">
+                <button class="cta" type="submit">Login</button>
+                <button type="button" class="ghost" onclick="demoLogin()">Demo Login</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- SIGNUP -->
+      <section id="signup" class="view" aria-labelledby="signupTitle">
+        <div class="auth-wrap">
+          <div class="auth-card" role="form" aria-labelledby="signupTitle">
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px">
+              <div class="logo" style="width:44px;height:44px;font-size:16px">DG</div>
+              <div>
+                <h2 id="signupTitle">Create Account</h2>
+                <div class="muted">Secure your devices in minutes (demo)</div>
+              </div>
+            </div>
+
+            <form id="signupForm" onsubmit="event.preventDefault(); doSignup();">
+              <label>Full Name <input id="suName" required /></label>
+              <label>Email ID <input id="suEmail" type="email" required /></label>
+              <label>Phone Number <input id="suPhone" required placeholder="+91..." /></label>
+              <label>Create Password <input id="suPass" type="password" required /></label>
+              <label>Confirm Password <input id="suPass2" type="password" required /></label>
+              <label style="margin-top:6px"><input id="suAgree" type="checkbox" /> I agree to Terms & Privacy Policy</label>
+
+              <div style="margin-top:12px;display:flex;gap:8px">
+                <button class="cta" type="submit">Sign Up</button>
+                <button type="button" class="ghost" onclick="demoSignup()">Demo Account</button>
+              </div>
+
+              <div style="margin-top:10px" class="muted">Already have an account? <a style="color:var(--neon);cursor:pointer" onclick="navigate('login')">Login</a></div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- DASHBOARD -->
+      <section id="dashboard" class="view" aria-labelledby="dashboardTitle">
+        <div class="dash-grid">
+          <aside class="sidebar card">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div class="logo" style="width:44px;height:44px">DG</div>
+              <div>
+                <div id="userName" style="font-weight:700">User</div>
+                <div class="muted" id="userContact">demo@dataguardx</div>
+              </div>
+            </div>
+
+            <nav class="nav-list" aria-label="Dashboard navigation">
+              <button class="nav-item active" data-section="alertsSection" onclick="switchSection(event)">Threat Alerts</button>
+              <button class="nav-item" data-section="scamSection" onclick="switchSection(event)">Scam Detection</button>
+              <button class="nav-item" data-section="scoreSection" onclick="switchSection(event)">Device Score</button>
+              <button class="nav-item" data-section="backupSection" onclick="switchSection(event)">Data Backup</button>
+              <button class="nav-item" data-section="logsSection" onclick="switchSection(event)">Activity Logs</button>
+              <button class="nav-item" data-section="settingsSection" onclick="switchSection(event)">Settings</button>
+            </nav>
+
+            <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px">
+              <label style="display:flex;align-items:center;gap:8px"><input id="darkToggle" type="checkbox" /> Dark mode</label>
+              <button class="ghost" id="logoutBtn" onclick="logout()">Logout</button>
+            </div>
+          </aside>
+
+          <main class="card" style="min-height:320px;">
+            <header style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <h2 id="dashboardTitle" style="margin:0">Threat Alerts</h2>
+                <div class="muted" id="dashSub">Monitor real-time scam & threat activity</div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="btn-sm" onclick="runQuickScan()">Quick Scan</button>
+                <button class="btn-sm ghost" onclick="exportAlertsCSV()">Export CSV</button>
+              </div>
+            </header>
+
+            <!-- ALERTS SECTION -->
+            <section id="alertsSection" class="section" style="margin-top:12px">
+              <div class="widgets" style="margin-bottom:12px">
+                <div class="widget">
+                  <div class="muted">Scam Detection Status</div>
+                  <div id="scamStatus" style="font-weight:700;margin-top:6px">No active scams</div>
+                </div>
+                <div class="widget">
+                  <div class="muted">Device Security Score</div>
+                  <div id="deviceScoreBig" style="font-weight:800;font-size:28px;margin-top:6px;color:var(--neon)">90</div>
+                </div>
+                <div class="widget">
+                  <div class="muted">Data Backup</div>
+                  <div id="backupStatusBig" class="muted" style="margin-top:6px">Last: —</div>
+                  <div style="margin-top:8px"><button class="btn-sm" onclick="backupNow()">Backup Now</button></div>
+                </div>
+              </div>
+
+              <div id="alertsList" aria-live="polite"></div>
+            </section>
+
+            <!-- OTHER SECTIONS (hidden by nav) -->
+            <section id="scamSection" class="section hidden" style="margin-top:12px"><h3>Scam Detection</h3><p class="muted">Configure link scanning and call alerts (demo).</p></section>
+            <section id="scoreSection" class="section hidden" style="margin-top:12px"><h3>Device Score</h3><p class="muted">Health indicators and suggestions.</p></section>
+            <section id="backupSection" class="section hidden" style="margin-top:12px"><h3>Backups</h3><p class="muted">Encrypted backup demo.</p></section>
+            <section id="logsSection" class="section hidden" style="margin-top:12px">
+              <h3>Activity Logs</h3>
+              <div class="logs" id="activityLogs"></div>
+            </section>
+            <section id="settingsSection" class="section hidden" style="margin-top:12px"><h3>Settings</h3><p class="muted">Notifications, devices, auto-block policies (demo).</p></section>
+          </main>
+        </div>
+      </section>
+
+    </main>
+
+    <footer>© DataGuardX 2025 · Prototype demo</footer>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modal" aria-hidden="true"></div>
+
+<script>
+(function(){
+  // Storage keys & sample data
+  const ALERTS_KEY = 'dgx_alerts_demo';
+  const USERS_KEY = 'dgx_users_demo';
+  const AUTH_KEY = 'dgx_auth_demo';
+  const LOGS_KEY = 'dgx_logs_demo';
+
+  const SAMPLE_ALERTS = [
+    {id:'t1', title:'Blocked phishing link', msg:'SMS with phishing URL auto-blocked', severity:'high', phone:'+919876543210', name:'Scammer A', location:'Mumbai, India', at: Date.now()-3600*1000},
+    {id:'t2', title:'Malware app quarantined', msg:'App tried to send contacts to remote server', severity:'medium', phone:'+919876543211', name:'Unknown', location:'Bengaluru, India', at: Date.now()-6*3600*1000}
+  ];
+  const DEMO_USER = {name:'Demo User', email:'demo@dataguardx', phone:'+919000000000', password:'demo123'};
+
+  // Init storage
+  if(!localStorage.getItem(ALERTS_KEY)) localStorage.setItem(ALERTS_KEY, JSON.stringify(SAMPLE_ALERTS));
+  if(!localStorage.getItem(USERS_KEY)) localStorage.setItem(USERS_KEY, JSON.stringify([DEMO_USER]));
+  if(!localStorage.getItem(LOGS_KEY)) localStorage.setItem(LOGS_KEY, JSON.stringify([]));
+
+  // Helpers
+  const $ = (s, root=document) => root.querySelector(s);
+  const $$ = (s, root=document) => Array.from(root.querySelectorAll(s));
+  const load = (k)=> JSON.parse(localStorage.getItem(k) || '[]');
+  const save = (k,v)=> localStorage.setItem(k, JSON.stringify(v));
+  function toast(msg){ const t=document.createElement('div'); t.textContent=msg; t.style.cssText='position:fixed;right:20px;bottom:20px;padding:10px 14px;background:rgba(0,0,0,0.7);border-radius:8px;color:var(--neon);z-index:9999'; document.body.appendChild(t); setTimeout(()=>t.style.opacity='0',2400); setTimeout(()=>t.remove(),3000); }
+
+  // Navigation
+  window.navigate = (view) => {
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    const el = document.getElementById(view);
+    if(el) el.classList.add('active');
+    // update header button
+    const auth = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
+    $('#headerAuthBtn').textContent = auth ? 'Dashboard' : 'Login';
+    $('#headerAuthBtn').onclick = () => auth ? showDashboard() : navigate('login');
+  };
+
+  window.goProtected = () => {
+    const auth = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
+    if(auth) showDashboard(); else { toast('Please login to access dashboard'); navigate('login'); }
+  };
+
+  function showDashboard(){
+    navigate('dashboard');
+    initDashboard();
+  }
+
+  // Login / Signup flows
+  window.doLogin = function(){
+    const phone = $('#loginPhone').value.trim();
+    const email = $('#loginEmail').value.trim().toLowerCase();
+    const pass = $('#loginPass').value;
+    if(!phone || !email || !pass){ alert('Please fill all fields'); return; }
+    const users = load(USERS_KEY);
+    const u = users.find(x => (x.email === email || x.phone === phone) && x.password === pass);
+    if(!u){ alert('Invalid credentials (demo). Use Demo Login for quick access.'); return; }
+    localStorage.setItem(AUTH_KEY, JSON.stringify({name:u.name,email:u.email,phone:u.phone}));
+    logActivity('User logged in: ' + u.email);
+    toast('Login successful');
+    showDashboard();
+  };
+
+  window.demoLogin = function(){
+    const users = load(USERS_KEY);
+    const u = users[0];
+    localStorage.setItem(AUTH_KEY, JSON.stringify({name:u.name,email:u.email,phone:u.phone}));
+    logActivity('Demo login');
+    toast('Demo login');
+    showDashboard();
+  };
+
+  window.doSignup = function(){
+    const name = $('#suName').value.trim();
+    const email = $('#suEmail').value.trim().toLowerCase();
+    const phone = $('#suPhone').value.trim();
+    const pass = $('#suPass').value, pass2 = $('#suPass2').value;
+    const agree = $('#suAgree').checked;
+    if(!name || !email || !phone || !pass || !pass2){ alert('Fill all fields'); return; }
+    if(!agree){ alert('Agree to terms'); return; }
+    if(pass.length < 6){ alert('Password 6+ chars'); return; }
+    if(pass !== pass2){ alert('Passwords mismatch'); return; }
+    const users = load(USERS_KEY);
+    if(users.some(u=>u.email===email)){ alert('Account exists'); return; }
+    users.push({name,email,phone,password:pass});
+    save(USERS_KEY, users);
+    localStorage.setItem(AUTH_KEY, JSON.stringify({name,email,phone}));
+    logActivity('Account created: ' + email);
+    toast('Account created — welcome ' + name);
+    showDashboard();
+  };
+
+  window.demoSignup = function(){
+    save(USERS_KEY, [DEMO_USER]);
+    localStorage.setItem(AUTH_KEY, JSON.stringify({name:DEMO_USER.name,email:DEMO_USER.email,phone:DEMO_USER.phone}));
+    toast('Demo account created');
+    showDashboard();
+  };
+
+  window.togglePassword = function(){
+    const p = $('#loginPass');
+    const t = $('#togglePass');
+    if(p.type==='password'){ p.type='text'; t.textContent='Hide'; } else { p.type='password'; t.textContent='Show'; }
+  };
+
+  // Alerts rendering
+  function renderLandingAlerts(){
+    const container = $('#landingAlerts');
+    const arr = load(ALERTS_KEY).slice().sort((a,b)=>b.at-a.at);
+    container.innerHTML = '';
+    if(!arr.length){ container.innerHTML = '<div class="muted">No alerts (demo).</div>'; return; }
+    arr.slice(0,6).forEach(a=>{
+      const el = document.createElement('div'); el.className='alert';
+      el.innerHTML = `<div class="left" style="background:${a.severity==='high' ? 'var(--danger)': 'linear-gradient(90deg,var(--neon),var(--accent))'}"></div>
+        <div>
+          <h5>${escape(a.title)}</h5>
+          <p class="muted" style="margin:6px 0">${escape(a.msg)}</p>
+          <div class="meta">${new Date(a.at).toLocaleString()} · ${escape(a.location||'Unknown')}</div>
+        </div>`;
+      container.appendChild(el);
+    });
+  }
+
+  function escape(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // Dashboard functions
+  function initDashboard(){
+    const auth = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
+    if(!auth){ navigate('login'); return; }
+    $('#userName').textContent = auth.name || auth.email || 'User';
+    $('#userContact').textContent = auth.email || auth.phone || '';
+    renderDashboardAlerts();
+    renderLogs();
+    updateStatus();
+    // dark toggle
+    const dm = localStorage.getItem('dgx_dark')==='1';
+    $('#darkToggle').checked = dm; applyDark(dm);
+    $('#darkToggle').onchange = () => { const v = $('#darkToggle').checked; localStorage.setItem('dgx_dark', v ? '1' : '0'); applyDark(v); };
+  }
+
+  function renderDashboardAlerts(){
+    const panel = $('#alertsList');
+    const arr = load(ALERTS_KEY).slice().sort((a,b)=>b.at-a.at);
+    panel.innerHTML = '';
+    if(!arr.length){ panel.innerHTML = '<div class="muted">No active alerts.</div>'; return; }
+    arr.forEach(a=>{
+      const row = document.createElement('div'); row.className='card'; row.style.marginBottom='10px';
+      row.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:700">${escape(a.title)}</div>
+          <div class="muted small">${new Date(a.at).toLocaleString()} · ${escape(a.location||'Unknown')}</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-sm" data-id="${a.id}" data-action="details">Details</button>
+          <button class="btn-sm ghost" data-id="${a.id}" data-action="ack">Acknowledge</button>
+        </div>
+      </div>
+      <div style="margin-top:8px" class="muted">${escape(a.msg)}</div>`;
+      panel.appendChild(row);
+    });
+    // attach actions
+    panel.querySelectorAll('button[data-action]').forEach(btn=>{
+      btn.addEventListener('click',(e)=>{
+        const id = e.currentTarget.dataset.id; const act = e.currentTarget.dataset.action;
+        if(act==='details') showAlertDetails(id);
+        else if(act==='ack') acknowledgeAlert(id);
+      });
+    });
+  }
+
+  function showAlertDetails(id){
+    const arr = load(ALERTS_KEY); const a = arr.find(x=>x.id===id); if(!a) return;
+    openModal(`<h3>${escape(a.title)}</h3>
+      <p class="muted">${new Date(a.at).toLocaleString()} · ${escape(a.location||'Unknown')}</p>
+      <p style="margin-top:8px">${escape(a.msg)}</p>
+      <h4 style="margin-top:10px">Scammer Details (demo)</h4>
+      <ul class="muted">
+        <li><strong>Name:</strong> ${escape(a.name||'Unknown')}</li>
+        <li><strong>Phone:</strong> ${escape(a.phone||'Unknown')}</li>
+        <li><strong>Location:</strong> ${escape(a.location||'Unknown')}</li>
+      </ul>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="cta" id="modalBlock">Auto-block</button>
+        <button class="ghost" id="modalClose">Close</button>
+      </div>`);
+    $('#modalBlock').addEventListener('click', ()=>{ acknowledgeAlert(id,true); closeModal(); });
+    $('#modalClose').addEventListener('click', closeModal);
+  }
+
+  function acknowledgeAlert(id, autoblock=false){
+    let arr = load(ALERTS_KEY); const idx = arr.findIndex(x=>x.id===id);
+    if(idx>=0){
+      const removed = arr.splice(idx,1)[0]; save(ALERTS_KEY,arr); renderDashboardAlerts(); renderLandingAlerts();
+      logActivity('Acknowledged alert: ' + removed.title + (autoblock ? ' (auto-blocked)' : ''));
+      toast('Alert acknowledged');
+    }
+    updateStatus();
+  }
+
+  // Quick scan & demo alerts
+  window.runQuickScan = function(){
+    const alertBtn = document.activeElement;
+    const newAlert = {id:'s'+Date.now(), title:'Quick Scan: Suspicious app', msg:'App with elevated permissions quarantined', severity:'medium', phone:'+919999900001', name:'Unknown', location:'Chennai, India', at: Date.now()};
+    const arr = load(ALERTS_KEY); arr.unshift(newAlert); save(ALERTS_KEY, arr); renderLandingAlerts(); renderDashboardAlerts(); logActivity('Quick scan completed');
+    toast('Quick scan: 1 item quarantined');
+  };
+
+  window.triggerDemoAlert = function(){
+    triggerDemoAlert();
+  };
+
+  function triggerDemoAlert(){
+    const demo = {id:'s'+Date.now(), title:'Demo Alert: Suspicious WhatsApp link', msg:'Blocked malicious WhatsApp link', severity:'high', phone:'+919888800002', name:'Scammer Demo', location:'Hyderabad, India', at: Date.now()};
+    const arr = load(ALERTS_KEY); arr.unshift(demo); save(ALERTS_KEY,arr); renderLandingAlerts(); renderDashboardAlerts(); logActivity('Demo alert triggered'); notify('Demo alert blocked');
+  }
+
+  // CSV export
+  window.exportAlertsCSV = function(){
+    const arr = load(ALERTS_KEY);
+    if(!arr.length){ toast('No alerts to export'); return; }
+    const rows = [['id','title','msg','severity','phone','name','location','at']].concat(arr.map(a=>[a.id,a.title,a.msg,a.severity,a.phone||'',a.name||'',a.location||'', new Date(a.at).toISOString()]));
+    const csv = rows.map(r=>r.map(c=>"${String(c).replace(/"/g,'""')}").join(',')).join('\n');
+    const blob = new Blob([csv],{type:'text/csv'}); const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'dataguardx_alerts.csv'; a.click(); URL.revokeObjectURL(url);
+  };
+
+  // Backup
+  window.backupNow = function(){
+    $('#backupStatusBig').textContent = 'Backing up...';
+    setTimeout(()=>{ $('#backupStatusBig').textContent = 'Last: ' + new Date().toLocaleString(); logActivity('Manual backup completed'); toast('Backup completed'); }, 1200);
+  };
+
+  // Activity logs
+  function logActivity(desc){
+    const logs = load(LOGS_KEY);
+    logs.unshift({id:'l'+Date.now(), desc, at: Date.now()});
+    save(LOGS_KEY, logs.slice(0,500)); renderLogs();
+  }
+  function renderLogs(){
+    const logs = load(LOGS_KEY); const el = $('#activityLogs');
+    if(!el) return;
+    if(!logs.length){ el.innerHTML = '<div class="muted">No activity</div>'; return; }
+    el.innerHTML = logs.map(l=><div style="padding:6px;border-bottom:1px solid rgba(255,255,255,0.03)">${new Date(l.at).toLocaleString()} — ${escape(l.desc)}</div>).join('');
+  }
+
+  // Status update
+  function updateStatus(){
+    const arr = load(ALERTS_KEY);
+    $('#scamStatus').textContent = arr.some(a=>a.severity==='high') ? 'Active scams detected' : 'No active scams';
+    $('#deviceScoreBig').textContent = Math.max(62, 95 - arr.length*3 - Math.floor(Math.random()*4));
+    $('#homeScore').textContent = $('#deviceScoreBig').textContent;
+  }
+
+  // Modal helpers
+  const modalRoot = $('#modal');
+  function openModal(html){
+    modalRoot.innerHTML = '<div class="modal" role="dialog" aria-modal="true">' + html + '</div>';
+    modalRoot.style.display = 'flex'; modalRoot.setAttribute('aria-hidden','false');
+  }
+  function closeModal(){ modalRoot.style.display = 'none'; modalRoot.setAttribute('aria-hidden','true'); modalRoot.innerHTML=''; }
+
+  // Auth guard & logout
+  window.logout = function(){ localStorage.removeItem(AUTH_KEY); toast('Logged out'); navigate('home'); };
+
+  // Apply dark style toggle (small visual change)
+  function applyDark(on){ if(on){ document.documentElement.style.setProperty('--panel','#021017'); } else { document.documentElement.style.setProperty('--panel','#071826'); } }
+
+  // Notifications
+  function notify(msg){
+    if('Notification' in window && Notification.permission==='granted'){ new Notification('DataGuardX',{body:msg}); }
+    else if('Notification' in window && Notification.permission!=='denied'){ Notification.requestPermission().then(p=>{ if(p==='granted') new Notification('DataGuardX',{body:msg}); else toast(msg); }); }
+    else toast(msg);
+  }
+
+  // Utility: escape done earlier
+
+  // Switch dashboard subsection
+  window.switchSection = function(e){
+    const btn = e.currentTarget;
+    $$('.nav-item').forEach(n=>n.classList.remove('active'));
+    btn.classList.add('active');
+    const target = btn.dataset.section;
+    document.querySelectorAll('.section').forEach(s=>s.classList.add('hidden'));
+    document.getElementById(target).classList.remove('hidden');
+    $('#dashboardTitle').textContent = btn.textContent;
+  };
+
+  // Keyboard: N triggers demo alert (presentation)
+  document.addEventListener('keydown',(e)=>{ if(e.key.toLowerCase()==='n'){ triggerDemoAlert(); } });
+
+  // Utility trigger for external usage
+  window.triggerDemoAlert = triggerDemoAlert;
+
+  // Initialize UI on load
+  function init(){
+    renderLandingAlerts();
+    // header auth button
+    const auth = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
+    $('#headerAuthBtn').textContent = auth ? 'Dashboard' : 'Login';
+    $('#headerAuthBtn').onclick = () => auth ? showDashboard() : navigate('login');
+    renderDashboardAlerts();
+    renderLogs();
+    updateStatus();
+    // wire modal close on backdrop click
+    modalRoot.addEventListener('click', (ev)=>{ if(ev.target===modalRoot) closeModal(); });
+    // apply dark saved
+    applyDark(localStorage.getItem('dgx_dark') === '1');
+  }
+
+  // small utility to escape input for innerHTML
+  function escape(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // Expose some methods for debugging
+  window.DGX = {
+    triggerDemoAlert,
+    runQuickScan,
+    renderLandingAlerts,
+    getAlerts: ()=> load(ALERTS_KEY),
+    clearAlerts: ()=> { save(ALERTS_KEY,[]); renderLandingAlerts(); renderDashboardAlerts(); }
+  };
+
+  // Kickoff
+  init();
+
+  // Ensure functions referenced earlier are available in global scope
+  window.renderLandingAlerts = renderLandingAlerts;
+  window.renderDashboardAlerts = renderDashboardAlerts;
+  window.renderDashboardAlertsImpl = renderDashboardAlerts;
+
+})();
+</script>
+</body>
+</html>
